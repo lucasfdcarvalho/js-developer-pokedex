@@ -1,25 +1,42 @@
+const body = document.querySelector("body");
+const urlParametros = new URLSearchParams(window.location.search);
+const idPokemon = urlParametros.get("id");
 
-const urlParams = new URLSearchParams(window.location.search);
-const pokemonId = urlParams.get('id');
+const buscarPokemon = async (pokemonId) => {
+    return fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`)
+            .then((response) => response.json())
+            .then((pokemon) => body.innerHTML = montarDetails(pokemon))
+            .catch(error => console.error(error))
+}
 
-fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`)
-    .then(response => response.json())
-    .then(data => {
-        const pokemonName = data.name;  
-        const pokemonImage = data.sprites.other['dream_world'].front_default; 
-        const pokemonTypes = data.types.map(type => type.type.name).join(' • ');  
+const pegarTypes = (pokemon) => {
+    return pokemon.types.map((type) => type.type.name).join("  ");
+}
 
-        document.querySelector('.card h2').textContent = pokemonName.charAt(0).toUpperCase() + pokemonName.slice(1);
-        document.querySelector('.card .number').textContent = `#${pokemonId.padStart(3, '0')}`;
-        document.querySelector('.card img').src = pokemonImage;
-        document.querySelector('.card .type').textContent = pokemonTypes;
+const formatarId = (id) => {
+    return id.toString().padStart(3, "0");
+}
 
-        const stats = data.stats.map(stat => {
-            return `<p><strong>${stat.stat.name.charAt(0).toUpperCase() + stat.stat.name.slice(1)}:</strong> ${stat.base_stat}</p>`;
-        }).join('');
-        document.querySelector('.card .stats').innerHTML = stats;
-    })
-    .catch(error => {
-        console.error('Erro ao buscar os dados do Pokémon:', error);
-        document.querySelector('.card').innerHTML = '<p>Erro ao carregar as informações do Pokémon.</p>';
-    });
+const pegarStats = (pokemon) => {
+    return pokemon.stats.map((stats) => `<p><strong>${stats.stat.name}: ${stats.base_stat}`).join("");
+}
+
+const montarDetails = (pokemon) => {
+    return `<section class="content" id="${pokemon.types[0].type.name}">
+                <div class="pokemon-detail">
+                    <div class="header">
+                        <h2>${pokemon.name}</h2>
+                        <p class="number">${formatarId(pokemon.id)}</p>
+                        <img src="${pokemon.sprites.other.dream_world.front_default}" alt="${pokemon.name}">
+                        <p class="type">${pegarTypes(pokemon)}</p>
+
+                        <div class="atributos">${pegarStats(pokemon)}</div>
+                    </div>
+                </div>
+            </section>
+            
+        `
+}
+
+
+idPokemon ? buscarPokemon(idPokemon) : console.log("ID do Pokemon não encontrado");
